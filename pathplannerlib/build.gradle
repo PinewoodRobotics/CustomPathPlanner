@@ -1,16 +1,10 @@
 plugins {
-    id 'cpp'
     id 'java'
-    id 'google-test'
     id 'edu.wpi.first.wpilib.repositories.WPILibRepositoriesPlugin' version '2025.0'
-    id 'edu.wpi.first.NativeUtils' version '2025.9.0'
-    id 'edu.wpi.first.GradleJni' version '1.1.0'
     id 'edu.wpi.first.GradleVsCode' version '2.1.0'
-    id 'com.diffplug.spotless' version '6.11.0'
     id 'jacoco'
 }
 
-// WPILib Version
 ext.wpilibVersion = "2025.+"
 
 java {
@@ -26,9 +20,6 @@ if (project.hasProperty('releaseMode')) {
 } else {
     wpilibRepositories.addAllDevelopmentRepositories(project)
 }
-
-// Apply C++ configuration
-apply from: 'config.gradle'
 
 // Apply Java configuration
 dependencies {
@@ -53,119 +44,12 @@ dependencies {
     testRuntimeOnly "us.hebi.quickbuf:quickbuf-runtime:1.3.2"
 }
 
-// Set up exports properly
-nativeUtils {
-    exportsConfigs {
-        PathplannerLib {
-            x86ExcludeSymbols = [
-                '_CT??_R0?AV_System_error',
-                '_CT??_R0?AVexception',
-                '_CT??_R0?AVfailure',
-                '_CT??_R0?AVruntime_error',
-                '_CT??_R0?AVsystem_error',
-                '_CTA5?AVfailure',
-                '_TI5?AVfailure',
-                '_CT??_R0?AVout_of_range',
-                '_CTA3?AVout_of_range',
-                '_TI3?AVout_of_range',
-                '_CT??_R0?AVbad_cast'
-            ]
-            x64ExcludeSymbols = [
-                '_CT??_R0?AV_System_error',
-                '_CT??_R0?AVexception',
-                '_CT??_R0?AVfailure',
-                '_CT??_R0?AVruntime_error',
-                '_CT??_R0?AVsystem_error',
-                '_CTA5?AVfailure',
-                '_TI5?AVfailure',
-                '_CT??_R0?AVout_of_range',
-                '_CTA3?AVout_of_range',
-                '_TI3?AVout_of_range',
-                '_CT??_R0?AVbad_cast'
-            ]
-        }
-    }
-}
-
-model {
-    components {
-        PathplannerLib(NativeLibrarySpec) {
-            sources {
-                cpp {
-                    source {
-                        srcDirs 'src/main/native/cpp'
-                        include '**/*.cpp'
-                    }
-                    exportedHeaders {
-                        srcDirs 'src/main/native/include'
-                    }
-                }
-            }
-            nativeUtils.useRequiredLibrary(it, 'wpilib_shared')
-        }
-    }
-    testSuites {
-        PathplannerLibTest {
-            sources.cpp {
-                source {
-                    srcDir 'src/test/native/cpp'
-                    include '**/*.cpp'
-                }
-            }
-
-            nativeUtils.useRequiredLibrary(it, "wpilib_executable_shared", "googletest_static")
-        }
-    }
-}
-
-spotless {
-    java {
-        target fileTree('.') {
-            include '**/*.java'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        toggleOffOn()
-        googleJavaFormat()
-        removeUnusedImports()
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    cpp {
-        target fileTree('.') {
-            include '**/*.cpp', '**/*.h'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        eclipseCdt()
-    }
-    groovyGradle {
-        target fileTree('.') {
-            include '**/*.gradle'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        greclipse()
-        indentWithSpaces(4)
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    format 'misc', {
-        target fileTree('.') {
-            include '**/*.md', '**/.gitignore'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        trimTrailingWhitespace()
-        indentWithSpaces(4)
-        endWithNewline()
-    }
-}
-
 javadoc {
     exclude 'org/json/simple/**'
     options {
         links 'https://docs.oracle.com/en/java/javase/11/docs/api/', 'https://github.wpilib.org/allwpilib/docs/release/java/'
     }
 }
-
-apply from: 'publish.gradle'
 
 wrapper {
     gradleVersion '8.11'
